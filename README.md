@@ -270,18 +270,24 @@ Tests run: 29, Failures: 0, Errors: 0, Skipped: 0
 BUILD SUCCESS
 ```
 
-### Surefire HTML Reports
+### Surefire Reports
 
-After running `mvn test`, individual test class reports are available at:
+**Plain-text** (generated automatically by `mvn test`):
 
 ```
-target/surefire-reports/
+target/surefire-reports/*.txt
 ```
 
-Open any `.txt` file for a plain-text summary. The HTML report is automatically generated during `mvn test` and is written to:
+**HTML** (run as a second step after `mvn test`):
+
+```bash
+mvn surefire-report:report -DskipTests
+```
+
+This reads the XML results produced by `mvn test` and generates a fully styled HTML report with CSS and JS bundled alongside it:
 
 ```
 target/reports/surefire.html
 ```
 
-Open that file in any browser for a formatted, per-class test result view.
+Open `target/reports/surefire.html` in any browser — all CSS and JS assets are present in the same `target/reports/` directory so it renders without a server.
