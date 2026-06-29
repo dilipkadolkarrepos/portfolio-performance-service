@@ -6,6 +6,7 @@ import com.portfolio.performance.model.request.AttributionRequest;
 import com.portfolio.performance.model.request.GroupInput;
 import com.portfolio.performance.model.response.AttributionResponse;
 import com.portfolio.performance.model.response.GroupContributionResult;
+import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -14,13 +15,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Stateless POJO that performs the core portfolio attribution calculation.
+ * Stateless Spring component that performs the core portfolio attribution calculation.
  *
  * <p>All arithmetic uses {@link BigDecimal} with {@link RoundingMode#HALF_UP} at
  * six decimal places — no {@code double} arithmetic anywhere in the engine.
  *
- * <p>Intentionally free of Spring annotations so every scenario can be driven
- * with a plain {@code new AttributionCalculator()} in unit tests.
+ * <p>The class carries no mutable state so it can still be exercised with a
+ * plain {@code new AttributionCalculator()} in pure unit tests while also being
+ * injectable as a Spring bean in the service layer.
  *
  * <h2>Processing order</h2>
  * <ol>
@@ -30,6 +32,7 @@ import java.util.List;
  *   <li>Sum contributions and assemble the response.</li>
  * </ol>
  */
+@Component
 public class AttributionCalculator {
 
     private static final BigDecimal ONE_HUNDRED  = new BigDecimal("100");

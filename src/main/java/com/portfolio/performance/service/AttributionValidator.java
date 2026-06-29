@@ -2,19 +2,21 @@ package com.portfolio.performance.service;
 
 import com.portfolio.performance.exception.InvalidAttributionInputException;
 import com.portfolio.performance.model.request.GroupInput;
+import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
 
 /**
- * Stateless POJO that enforces business-rule constraints on an
+ * Stateless Spring component that enforces business-rule constraints on an
  * {@code AttributionRequest} before the attribution engine processes it.
  *
- * <p>Intentionally free of Spring annotations so every method can be exercised
- * with a plain {@code new AttributionValidator()} in unit tests — no application
- * context or mocking framework required.
+ * <p>The class carries no mutable state so it can still be exercised with a
+ * plain {@code new AttributionValidator()} in pure unit tests while also being
+ * injectable as a Spring bean in the service layer.
  */
+@Component
 public class AttributionValidator {
 
     /** Inclusive lower bound for the sum of all group weights (percent). */
