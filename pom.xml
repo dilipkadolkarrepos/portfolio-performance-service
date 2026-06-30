@@ -55,6 +55,12 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- Spring Boot Actuator — /actuator/health and /actuator/info -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
         <!-- Spring Boot Test -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

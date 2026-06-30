@@ -1,11 +1,13 @@
 package com.portfolio.performance.controller;
 
+import com.portfolio.performance.config.AttributionMdcFilter;
 import com.portfolio.performance.model.request.AttributionRequest;
 import com.portfolio.performance.model.response.AttributionResponse;
 import com.portfolio.performance.service.AttributionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -43,6 +45,12 @@ public class AttributionController {
     @PostMapping("/attribution")
     public ResponseEntity<AttributionResponse> processAttribution(
             @Valid @RequestBody AttributionRequest request) {
+
+        // Populate MDC requestId now that the JSON body has been deserialized.
+        // The MDC filter already set correlationId; this adds the application-level key
+        // so every downstream log line (service, calculator, simulator) carries both.
+        // The filter's finally block clears the MDC after the response is committed.
+        MDC.put(AttributionMdcFilter.MDC_REQUEST_ID, request.getRequestId());
 
         log.info("Attribution request received [requestId={}, portfolioId={}]",
                 request.getRequestId(), request.getPortfolioId());
