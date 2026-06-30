@@ -124,7 +124,7 @@ class AttributionServiceImplTest {
         @BeforeEach
         void setUp() {
             validator          = new AttributionValidator();
-            calculator         = new AttributionCalculator();
+            calculator         = new AttributionCalculator(new PricingResilienceSimulator());
             idempotencyService = org.mockito.Mockito.mock(IdempotencyService.class);
             service            = new AttributionServiceImpl(validator, calculator, idempotencyService);
         }
@@ -259,6 +259,7 @@ class AttributionServiceImplTest {
     @Import({AttributionServiceImpl.class,
              AttributionValidator.class,
              AttributionCalculator.class,
+             PricingResilienceSimulator.class,
              IdempotencyService.class})
     class IntegrationTests {
 

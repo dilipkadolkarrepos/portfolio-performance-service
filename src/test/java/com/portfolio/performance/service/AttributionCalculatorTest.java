@@ -11,6 +11,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -34,11 +35,13 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class AttributionCalculatorTest {
 
-    private AttributionCalculator calculator;
+    private PricingResilienceSimulator simulator;
+    private AttributionCalculator      calculator;
 
     @BeforeEach
     void setUp() {
-        calculator = new AttributionCalculator();
+        simulator  = new PricingResilienceSimulator();
+        calculator = new AttributionCalculator(simulator);
     }
 
     // ------------------------------------------------------------------
@@ -251,7 +254,24 @@ class AttributionCalculatorTest {
     }
 
     // ------------------------------------------------------------------
-    // Gate case 7 — response fields echoed correctly from the request
+    // Gate case 7 — fallback path completes within 500 ms
+    // (simulator sleeps ~50 ms per probe; a single-group request with
+    //  one fallback must finish well within the 500 ms ceiling)
+    // ------------------------------------------------------------------
+
+    @Test
+    @DisplayName("Fallback path: single group with fallback resolves within 500 ms")
+    void fallbackPath_completesWithinTimeout() {
+        List<GroupInput> groups = List.of(
+                group("Bonds", "100", null, "0.50")   // primary absent, fallback present
+        );
+
+        assertTimeout(Duration.ofMillis(500), () -> calculator.calculate(requestWith(groups)),
+                "Fallback resolution (including ~50 ms probe) must complete within 500 ms");
+    }
+
+    // ------------------------------------------------------------------
+    // Gate case 8 — response fields echoed correctly from the request
     // ------------------------------------------------------------------
 
     @Test
