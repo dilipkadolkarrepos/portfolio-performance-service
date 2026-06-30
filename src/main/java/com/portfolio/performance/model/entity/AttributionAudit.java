@@ -52,8 +52,12 @@ public class AttributionAudit {
     @Column(name = "status")
     private String status;
 
-    /** Arithmetic sum of all group contribution percentages, rounded to 6 decimal places. */
-    @Column(name = "total_contribution_pct")
+    /**
+     * Arithmetic sum of all group contribution percentages, rounded to 6 decimal places.
+     * Explicit precision (19) and scale (6) prevent H2 from truncating trailing zeros on
+     * round-trip, ensuring the stored value is numerically identical to the computed value.
+     */
+    @Column(name = "total_contribution_pct", precision = 19, scale = 6)
     private BigDecimal totalContributionPct;
 
     /** {@code true} when one or more groups used fallback pricing or had no pricing at all. */
