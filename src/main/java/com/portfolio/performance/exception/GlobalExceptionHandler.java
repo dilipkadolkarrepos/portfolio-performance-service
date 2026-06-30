@@ -13,6 +13,9 @@ import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 
+// Attribution-specific imports
+import com.portfolio.performance.exception.InvalidAttributionInputException;
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -33,6 +36,15 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleMalformed(HttpMessageNotReadableException ex, HttpServletRequest request) {
         String message = "Request body is missing or cannot be parsed";
         ErrorResponse body = new ErrorResponse(Instant.now(), HttpStatus.BAD_REQUEST.value(), "Malformed Request", message, request.getRequestURI());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
+
+    @ExceptionHandler(InvalidAttributionInputException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidAttributionInput(
+            InvalidAttributionInputException ex, HttpServletRequest request) {
+        ErrorResponse body = new ErrorResponse(
+                Instant.now(), HttpStatus.BAD_REQUEST.value(),
+                "Invalid Attribution Input", ex.getMessage(), request.getRequestURI());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 
