@@ -121,7 +121,7 @@ class PerformanceControllerIntegrationTest {
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         Map<String, Object> body = response.getBody();
         assertNotNull(body);
-        assertEquals("Validation Failed", body.get("error"));
+        assertEquals("VALIDATION_FAILED", body.get("error"));
     }
 
     @Test

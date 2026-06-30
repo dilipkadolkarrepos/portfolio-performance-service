@@ -139,7 +139,7 @@ class PerformanceControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("Validation Failed"));
+                .andExpect(jsonPath("$.error").value("VALIDATION_FAILED"));
     }
 
     @Test

@@ -229,7 +229,7 @@ class AttributionControllerTest {
     class BeanValidation {
 
         @Test
-        @DisplayName("Blank requestId → HTTP 400 Validation Failed")
+        @DisplayName("Blank requestId → HTTP 400 VALIDATION_FAILED")
         void blankRequestId_returns400() throws Exception {
             AttributionRequest bad = AttributionRequest.builder()
                     .requestId("")          // @NotBlank violated
@@ -244,11 +244,13 @@ class AttributionControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(bad)))
                     .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.error").value("Validation Failed"));
+                    .andExpect(jsonPath("$.error").value("VALIDATION_FAILED"))
+                    .andExpect(jsonPath("$.fieldErrors").isArray())
+                    .andExpect(jsonPath("$.message").value("Request validation failed"));
         }
 
         @Test
-        @DisplayName("Null groups list → HTTP 400 Validation Failed")
+        @DisplayName("Null groups list → HTTP 400 VALIDATION_FAILED")
         void nullGroups_returns400() throws Exception {
             AttributionRequest bad = AttributionRequest.builder()
                     .requestId(REQUEST_ID)
@@ -263,16 +265,16 @@ class AttributionControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(bad)))
                     .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.error").value("Validation Failed"));
+                    .andExpect(jsonPath("$.error").value("VALIDATION_FAILED"));
         }
 
         @Test
-        @DisplayName("Missing body → HTTP 400 Malformed Request")
+        @DisplayName("Missing body → HTTP 400 MALFORMED_REQUEST")
         void missingBody_returns400() throws Exception {
             mockMvc.perform(post(ENDPOINT)
                             .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.error").value("Malformed Request"));
+                    .andExpect(jsonPath("$.error").value("MALFORMED_REQUEST"));
         }
     }
 
@@ -295,7 +297,7 @@ class AttributionControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(validRequest)))
                     .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.error").value("Invalid Attribution Input"))
+                    .andExpect(jsonPath("$.error").value("INVALID_INPUT"))
                     .andExpect(jsonPath("$.message").value(
                             "Total weight 95.00% is outside the allowed range of 99-101%"));
         }
