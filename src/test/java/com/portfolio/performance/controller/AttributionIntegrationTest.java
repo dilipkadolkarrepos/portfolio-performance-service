@@ -407,6 +407,70 @@ class AttributionIntegrationTest {
     }
 
     // -----------------------------------------------------------------------
+    // Test 8 — All three groups use fallback pricing (edge case)
+    //
+    // FALLBACK_USED groups are not "missing" — the attribution engine has a
+    // resolved return for every group. The expected outcome is therefore
+    // status=VALID and degraded=false, despite no group having primary pricing.
+    // Three warnings (one per group) confirm the fallback path was traversed.
+    //
+    // Arithmetic: (60×0.80/100) + (30×0.50/100) + (10×0.20/100)
+    //           = 0.480000 + 0.150000 + 0.020000 = 0.650000
+    // -----------------------------------------------------------------------
+
+    @Test
+    @DisplayName("Test 8: All groups FALLBACK_USED → HTTP 200, VALID, degraded=false, three warnings")
+    void allFallback_returns200_validStatus_degradedFalse_threeWarnings() {
+        List<GroupInput> groups = List.of(
+                group("US Equities",  "60", null, "0.80"),  // primary absent
+                group("Fixed Income", "30", null, "0.50"),  // primary absent
+                group("Alternatives", "10", null, "0.20")   // primary absent
+        );
+        AttributionRequest req = request("REQ-INT-ALL-FALLBACK", groups);
+
+        ResponseEntity<AttributionResponse> resp =
+                restTemplate.postForEntity(PATH, req, AttributionResponse.class);
+
+        assertEquals(HttpStatus.OK, resp.getStatusCode());
+        AttributionResponse body = resp.getBody();
+        assertNotNull(body);
+
+        assertAll("All-FALLBACK_USED response",
+                // FALLBACK_USED is not "missing" — result is VALID, not DEGRADED
+                () -> assertEquals(AttributionStatus.VALID, body.getStatus(),
+                        "All-fallback result must be VALID, not DEGRADED"),
+                () -> assertFalse(body.isDegraded(),
+                        "degraded must be false when all groups resolved via fallback"),
+
+                // Every group must carry pricingMode=FALLBACK_USED
+                () -> assertEquals(PricingMode.FALLBACK_USED,
+                        contributionFor(body, "US Equities").getPricingMode()),
+                () -> assertEquals(PricingMode.FALLBACK_USED,
+                        contributionFor(body, "Fixed Income").getPricingMode()),
+                () -> assertEquals(PricingMode.FALLBACK_USED,
+                        contributionFor(body, "Alternatives").getPricingMode()),
+
+                // Exactly three fallback warnings — one per group
+                () -> assertEquals(3, body.getWarnings().size(),
+                        "Expected exactly three fallback warnings"),
+                () -> assertTrue(body.getWarnings().stream()
+                        .anyMatch(w -> w.contains("US Equities")),
+                        "Warning must mention 'US Equities'"),
+                () -> assertTrue(body.getWarnings().stream()
+                        .anyMatch(w -> w.contains("Fixed Income")),
+                        "Warning must mention 'Fixed Income'"),
+                () -> assertTrue(body.getWarnings().stream()
+                        .anyMatch(w -> w.contains("Alternatives")),
+                        "Warning must mention 'Alternatives'"),
+
+                // Total must include all three fallback contributions
+                () -> assertEquals(0,
+                        new BigDecimal("0.650000").compareTo(body.getTotalContributionPct()),
+                        "totalContributionPct must be 0.650000")
+        );
+    }
+
+    // -----------------------------------------------------------------------
     // Private helpers
     // -----------------------------------------------------------------------
 

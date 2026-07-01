@@ -271,7 +271,66 @@ class AttributionCalculatorTest {
     }
 
     // ------------------------------------------------------------------
-    // Gate case 8 — response fields echoed correctly from the request
+    // Gate case 8 — all three groups use fallback pricing
+    //
+    // Edge case: FALLBACK_USED groups are NOT "missing" — missingGroups stays
+    // empty, so status must be VALID and degraded must be false even when every
+    // group was priced via the secondary source.  Three warnings (one per group)
+    // must be present, and the total must reflect all three fallback returns.
+    //
+    // (60×0.80/100) + (30×0.50/100) + (10×0.20/100) = 0.480 + 0.150 + 0.020
+    //                                                 = 0.650000
+    // ------------------------------------------------------------------
+
+    @Test
+    @DisplayName("All FALLBACK_USED — status=VALID, degraded=false, three warnings, correct total")
+    void allFallback_validStatus_degradedFalse_threeWarnings_correctTotal() {
+        List<GroupInput> groups = List.of(
+                group("US Equities",  "60", null, "0.80"),  // primary absent
+                group("Fixed Income", "30", null, "0.50"),  // primary absent
+                group("Alternatives", "10", null, "0.20")   // primary absent
+        );
+
+        AttributionResponse resp = calculator.calculate(requestWith(groups));
+
+        BigDecimal expectedTotal = new BigDecimal("0.650000");
+
+        assertAll("All-FALLBACK_USED result",
+                // Status must be VALID — fallback-priced groups are not "missing"
+                () -> assertEquals(AttributionStatus.VALID, resp.getStatus(),
+                        "All fallback groups still produce a VALID result"),
+                () -> assertFalse(resp.isDegraded(),
+                        "degraded must be false when all groups resolved via fallback"),
+
+                // All three groups must be tagged FALLBACK_USED
+                () -> assertEquals(PricingMode.FALLBACK_USED,
+                        resultFor(resp, "US Equities").getPricingMode()),
+                () -> assertEquals(PricingMode.FALLBACK_USED,
+                        resultFor(resp, "Fixed Income").getPricingMode()),
+                () -> assertEquals(PricingMode.FALLBACK_USED,
+                        resultFor(resp, "Alternatives").getPricingMode()),
+
+                // Exactly three fallback warnings — one per group
+                () -> assertEquals(3, resp.getWarnings().size(),
+                        "Expected exactly three fallback warnings"),
+                () -> assertTrue(resp.getWarnings().stream()
+                        .anyMatch(w -> w.contains("US Equities")),
+                        "Warning must mention 'US Equities'"),
+                () -> assertTrue(resp.getWarnings().stream()
+                        .anyMatch(w -> w.contains("Fixed Income")),
+                        "Warning must mention 'Fixed Income'"),
+                () -> assertTrue(resp.getWarnings().stream()
+                        .anyMatch(w -> w.contains("Alternatives")),
+                        "Warning must mention 'Alternatives'"),
+
+                // Total must reflect all three fallback contributions
+                () -> assertEquals(0, expectedTotal.compareTo(resp.getTotalContributionPct()),
+                        "Total contribution must be 0.650000")
+        );
+    }
+
+    // ------------------------------------------------------------------
+    // Gate case 9 — response fields echoed correctly from the request
     // ------------------------------------------------------------------
 
     @Test
